@@ -5,19 +5,22 @@ import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
 import { requireUserId } from '~/utils/auth.server.ts'
 import { prisma } from '~/utils/db.server.ts'
-import { Button, ErrorList, Field, TextareaField } from '~/utils/forms.tsx'
+import { Button, ErrorList, Field, SelectField, TextareaField } from '~/utils/forms.tsx'
+import { quantityUnits } from '~/utils/unitQuantitys.ts'
 
-export const NoteEditorSchema = z.object({
+export const ItemEditorSchema = z.object({
 	id: z.string().optional(),
 	title: z.string().min(1),
-	content: z.string().min(1),
+	content: z.string().nullish(),
+	quantity: z.string().refine(value => !isNaN(Number(value))),
+	quantityUnit: z.enum(quantityUnits),
 })
 
 export async function action({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const submission = parse(formData, {
-		schema: NoteEditorSchema,
+		schema: ItemEditorSchema,
 		acceptMultipleErrors: () => true,
 	})
 	if (submission.intent !== 'submit') {
@@ -32,7 +35,7 @@ export async function action({ request }: DataFunctionArgs) {
 			{ status: 400 },
 		)
 	}
-	let note: { id: string; owner: { username: string } }
+	let item: { id: string; owner: { username: string } }
 
 	const { title, content, id } = submission.value
 
@@ -40,6 +43,8 @@ export async function action({ request }: DataFunctionArgs) {
 		ownerId: userId,
 		title: title,
 		content: content,
+		quantity: 1,
+		quantityUnit: 'count',
 	}
 
 	const select = {
@@ -51,11 +56,11 @@ export async function action({ request }: DataFunctionArgs) {
 		},
 	}
 	if (id) {
-		const existingNote = await prisma.note.findFirst({
+		const existingItem = await prisma.item.findFirst({
 			where: { id, ownerId: userId },
 			select: { id: true },
 		})
-		if (!existingNote) {
+		if (!existingItem) {
 			return json(
 				{
 					status: 'error',
@@ -64,45 +69,48 @@ export async function action({ request }: DataFunctionArgs) {
 				{ status: 404 },
 			)
 		}
-		note = await prisma.note.update({
+		item = await prisma.item.update({
 			where: { id },
 			data,
 			select,
 		})
 	} else {
-		note = await prisma.note.create({ data, select })
+		item = await prisma.item.create({ data, select })
 	}
-	return redirect(`/users/${note.owner.username}/notes/${note.id}`)
+	return redirect(`/users/${item.owner.username}/items/${item.id}`)
 }
 
-export function NoteEditor({
-	note,
+export function ItemEditor({
+	item,
 }: {
-	note?: { id: string; title: string; content: string }
+	item?: { id: string; title: string; content?: string; quantity: number; quantityUnit: string }
 }) {
-	const noteEditorFetcher = useFetcher<typeof action>()
+	const itemEditorFetcher = useFetcher<typeof action>()
 
 	const [form, fields] = useForm({
-		id: 'note-editor',
-		constraint: getFieldsetConstraint(NoteEditorSchema),
-		lastSubmission: noteEditorFetcher.data?.submission,
+		id: 'item-editor',
+		constraint: getFieldsetConstraint(ItemEditorSchema),
+		lastSubmission: itemEditorFetcher.data?.submission,
 		onValidate({ formData }) {
-			return parse(formData, { schema: NoteEditorSchema })
+
+			return parse(formData, { schema: ItemEditorSchema.refine(data => console.log(data))  })
 		},
 		defaultValue: {
-			title: note?.title,
-			content: note?.content,
+			title: item?.title,
+			content: item?.content,
+			quantity: item?.quantity,
+			quantityUnit: item?.quantityUnit,
 		},
 		shouldRevalidate: 'onBlur',
 	})
 
 	return (
-		<noteEditorFetcher.Form
+		<itemEditorFetcher.Form
 			method="post"
-			action="/resources/note-editor"
+			action="/resources/item-editor"
 			{...form.props}
 		>
-			<input name="id" type="hidden" value={note?.id} />
+			<input name="id" type="hidden" value={item?.id} />
 			<Field
 				labelProps={{ htmlFor: fields.title.id, children: 'Title' }}
 				inputProps={{
@@ -119,6 +127,24 @@ export function NoteEditor({
 				}}
 				errors={fields.content.errors}
 			/>
+				<Field
+					labelProps={{ htmlFor: fields.quantity.id, children: 'Quantity' }}
+					inputProps={{
+						...conform.input(fields.quantity, {type: "text",}),
+						autoComplete: 'quantity',
+					}}
+					errors={fields.quantity.errors}
+				/>
+				<SelectField
+					options={quantityUnits}
+					errors={fields.quantityUnit.errors}
+					labelProps={{ htmlFor: fields.quantityUnit.id, children: 'Quantity Unit' }}
+					selectProps={{
+						...conform.select(fields.quantityUnit),
+
+					}}
+				/>
+
 			<ErrorList errors={form.errors} id={form.errorId} />
 			<div className="flex justify-end gap-4">
 				<Button size="md" variant="secondary" type="reset">
@@ -128,16 +154,16 @@ export function NoteEditor({
 					size="md"
 					variant="primary"
 					status={
-						noteEditorFetcher.state === 'submitting'
+						itemEditorFetcher.state === 'submitting'
 							? 'pending'
-							: noteEditorFetcher.data?.status ?? 'idle'
+							: itemEditorFetcher.data?.status ?? 'idle'
 					}
 					type="submit"
-					disabled={noteEditorFetcher.state !== 'idle'}
+					disabled={itemEditorFetcher.state !== 'idle'}
 				>
 					Submit
 				</Button>
 			</div>
-		</noteEditorFetcher.Form>
+		</itemEditorFetcher.Form>
 	)
 }

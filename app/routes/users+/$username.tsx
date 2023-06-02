@@ -3,7 +3,7 @@ import {
 	type DataFunctionArgs,
 	type V2_MetaFunction,
 } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
 import { Spacer } from '~/components/spacer.tsx'
@@ -22,6 +22,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			name: true,
 			imageId: true,
 			createdAt: true,
+			pantries: true
 		},
 	})
 	if (!user) {
@@ -67,12 +68,12 @@ export default function UsernameIndex() {
 						{isLoggedInUser ? (
 							<>
 								<ButtonLink
-									to="notes"
+									to="items"
 									variant="primary"
 									size="md"
 									prefetch="intent"
 								>
-									My notes
+									My items
 								</ButtonLink>
 								<ButtonLink
 									to="/settings/profile"
@@ -90,11 +91,25 @@ export default function UsernameIndex() {
 								size="md"
 								prefetch="intent"
 							>
-								{userDisplayName}'s notes
+								{userDisplayName}'s items
 							</ButtonLink>
 						)}
 					</div>
 				</div>
+			</div>
+
+			<Spacer size="sm" />
+			<div className="grid grid-cols-2 gap-16 md:grid-cols-3">
+				{user?.pantries?.map((pantry) => (
+
+				<div key={pantry.id} className="grid items-center justify-items-center gap-4 rounded-3xl bg-night-500 p-12 text-center">
+					<h4>{pantry.title}</h4>
+					<ButtonLink size="xs" to={`pantries/${pantry.id}`} variant="primary">
+						View items
+					</ButtonLink>
+				</div>))
+				}
+
 			</div>
 		</div>
 	)
@@ -114,11 +129,5 @@ export function ErrorBoundary() {
 
 export const meta: V2_MetaFunction<typeof loader> = ({ data, params }) => {
 	const displayName = data?.user.name ?? params.username
-	return [
-		{ title: `${displayName} | Epic Notes` },
-		{
-			name: 'description',
-			content: `${displayName} on Epic Notes is not a host or renter yet.`,
-		},
-	]
+	return [{ title: `${displayName} | Foodventory` }]
 }

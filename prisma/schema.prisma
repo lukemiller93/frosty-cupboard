@@ -63,7 +63,8 @@ model User {
   imageId String? @unique
 
   password Password?
-  notes    Note[]
+  items    Item[]
+  pantries Pantry[]
   roles    Role[]
   Session  Session[]
 }
@@ -83,13 +84,29 @@ model Session {
   expirationDate DateTime
 }
 
-model Note {
+model Item {
+  id           String   @id @unique @default(cuid())
+  title        String
+  content      String?
+  quantity     Int
+  quantityUnit String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner    User    @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId  String
+  pantry   Pantry? @relation(fields: [pantryId], references: [id])
+  pantryId String?
+}
+
+model Pantry {
   id        String   @id @unique @default(cuid())
   title     String
-  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId String
+
+  items Item[]
 }

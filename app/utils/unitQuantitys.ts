@@ -1,0 +1,16 @@
+export const quantityUnits = [
+	'LB',
+	'OZ',
+	'BAG',
+	'BOX',
+	'CAN',
+	'CT',
+	'EA',
+	'GAL',
+	'JAR',
+	'PKG',
+	'PT',
+	'QT',
+	'TUB',
+	'TUBE',
+]

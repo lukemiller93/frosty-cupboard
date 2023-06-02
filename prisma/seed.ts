@@ -4,6 +4,7 @@ import { createPassword, createUser } from 'tests/db-utils.ts'
 import { prisma } from '~/utils/db.server.ts'
 import { deleteAllData } from 'tests/setup/utils.ts'
 import { getPasswordHash } from '~/utils/auth.server.ts'
+import { quantityUnits } from '~/utils/unitQuantitys.ts'
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -23,9 +24,8 @@ async function seed() {
 		},
 	})
 	console.timeEnd(`👑 Created admin role/permission...`)
-	// hosts with ships and reviews
-	// renters with bookings and reviews
-	// hosts who are renters also
+
+	console.time(`🍽 Created 3 pantries...`)
 	const totalUsers = 40
 	console.time(`👤 Created ${totalUsers} users...`)
 	const users = await Promise.all(
@@ -49,12 +49,14 @@ async function seed() {
 							},
 						},
 					},
-					notes: {
+					items: {
 						create: Array.from({
 							length: faker.number.int({ min: 0, max: 10 }),
 						}).map(() => ({
-							title: faker.lorem.sentence(),
-							content: faker.lorem.paragraphs(),
+							title: faker.lorem.words(2),
+							content: faker.lorem.paragraph(),
+							quantity: faker.number.int({ min: 1, max: 10 }),
+							quantityUnit: faker.helpers.arrayElement(quantityUnits),
 						})),
 					},
 				},
@@ -90,22 +92,28 @@ async function seed() {
 					hash: await getPasswordHash('kodylovesyou'),
 				},
 			},
-			notes: {
+			pantries: {
 				create: [
 					{
-						title: 'Basic Koala Facts',
-						content:
-							'Koalas are found in the eucalyptus forests of eastern Australia. They have grey fur with a cream-coloured chest, and strong, clawed feet, perfect for living in the branches of trees!',
+						title: 'Chest Freezer',
 					},
 					{
-						title: 'Koalas like to cuddle',
-						content:
-							'Cuddly critters, koalas measure about 60cm to 85cm long, and weigh about 14kg.',
+						title: "Pantry",
+					},
+				],
+			},
+			items: {
+				create: [
+					{
+						title: 'Ground Beef',
+						content: 'ground beef from bryans',
+						quantity: 100,
+						quantityUnit: quantityUnits[0],
 					},
 					{
-						title: 'Not bears',
-						content:
-							"Although you may have heard people call them koala 'bears', these awesome animals aren’t bears at all – they are in fact marsupials. A group of mammals, most marsupials have pouches where their newborns develop.",
+						title: 'Canned Salmon',
+						quantity: 10,
+						quantityUnit: quantityUnits[5],
 					},
 				],
 			},

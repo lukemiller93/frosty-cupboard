@@ -22,16 +22,19 @@ export async function loader({ params, request }: DataFunctionArgs) {
 	if (!owner) {
 		throw new Response('Not found', { status: 404 })
 	}
-	const notes = await prisma.note.findMany({
+	const items = await prisma.item.findMany({
 		where: {
 			ownerId: owner.id,
 		},
 		select: {
 			id: true,
 			title: true,
+			quantity: true,
+			quantityUnit: true,
+			pantryId: true,
 		},
 	})
-	return json({ owner, notes })
+	return json({ owner, items })
 }
 
 export default function NotesRoute() {
@@ -41,7 +44,7 @@ export default function NotesRoute() {
 		'line-clamp-2 block rounded-l-full py-2 pl-8 pr-6 text-base lg:text-xl'
 	return (
 		<div className="flex h-full pb-12">
-			<div className="mx-auto grid w-full flex-grow grid-cols-4 bg-night-500 pl-2 md:container md:rounded-3xl">
+			<div className="mx-auto grid w-full flex-grow md:grid-cols-4 [grid-auto-rows:max-content] md:[grid-auto-rows:auto] bg-night-500 pl-2 md:container md:rounded-3xl">
 				<div className="col-span-1 py-12">
 					<Link
 						to={`/users/${data.owner.username}`}
@@ -53,7 +56,7 @@ export default function NotesRoute() {
 							className="h-16 w-16 rounded-full object-cover lg:h-24 lg:w-24"
 						/>
 						<h1 className="text-center text-base font-bold md:text-lg lg:text-left lg:text-2xl">
-							{ownerDisplayName}'s Notes
+							{ownerDisplayName}'s Items
 						</h1>
 					</Link>
 					<ul>
@@ -66,26 +69,27 @@ export default function NotesRoute() {
 									})
 								}
 							>
-								+ New Note
+								+ New Item
 							</NavLink>
 						</li>
-						{data.notes.map(note => (
-							<li key={note.id}>
+						{data.items.map(item => (
+							<li key={item.id}>
 								<NavLink
-									to={note.id}
+									to={item.id}
 									className={({ isActive }) =>
 										clsx(navLinkDefaultClassName, {
 											'bg-night-400': isActive,
 										})
 									}
 								>
-									{note.title}
+									{item.title} - {item.quantity}
+									{item.quantityUnit}
 								</NavLink>
 							</li>
 						))}
 					</ul>
 				</div>
-				<main className="col-span-3 bg-night-400 px-10 py-12 md:rounded-r-3xl">
+				<main className="md:col-span-3 bg-night-400 px-10 py-12 md:rounded-r-3xl">
 					<Outlet />
 				</main>
 			</div>

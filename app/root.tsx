@@ -60,8 +60,8 @@ export const links: LinksFunction = () => {
 
 export const meta: V2_MetaFunction = () => {
 	return [
-		{ title: 'Epic Notes' },
-		{ name: 'description', content: 'Find yourself in outer space' },
+		{ title: 'Foodventory' },
+		{ name: 'description', content: 'Track your pantry and freezer items!' },
 	]
 }
 
@@ -100,8 +100,7 @@ export default function App() {
 				<header className="container mx-auto py-6">
 					<nav className="flex justify-between">
 						<Link to="/">
-							<div className="font-light">epic</div>
-							<div className="font-bold">notes</div>
+							<div className="font-bold">FOODVENTORY</div>
 						</Link>
 						<div className="flex items-center gap-10">
 							{user ? (
@@ -121,8 +120,7 @@ export default function App() {
 
 				<div className="container mx-auto flex justify-between">
 					<Link to="/">
-						<div className="font-light">epic</div>
-						<div className="font-bold">notes</div>
+						<div className="font-bold">FOODVENTORY</div>
 					</Link>
 					<ThemeSwitch />
 				</div>
@@ -250,10 +248,10 @@ function UserDropdown() {
 					<DropdownMenu.Item asChild>
 						<Link
 							prefetch="intent"
-							to={`/users/${user.username}/notes`}
+							to={`/users/${user.username}/items`}
 							className="px-7 py-5 outline-none hover:bg-night-500 radix-highlighted:bg-night-500"
 						>
-							Notes
+							Items
 						</Link>
 					</DropdownMenu.Item>
 					<DropdownMenu.Item asChild>

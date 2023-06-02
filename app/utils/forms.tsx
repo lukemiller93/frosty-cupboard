@@ -1,8 +1,17 @@
 import * as Checkbox from '@radix-ui/react-checkbox'
+import * as Select from '@radix-ui/react-select'
+import {
+	CheckIcon,
+	ChevronDownIcon,
+	ChevronUpIcon,
+} from '@radix-ui/react-icons'
 import { Link } from '@remix-run/react'
+
 import { clsx } from 'clsx'
 import React, { useId } from 'react'
 import styles from './forms.module.css'
+
+
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -142,6 +151,65 @@ export function CheckboxField({
 		</div>
 	)
 }
+
+export function SelectField({labelProps, selectProps,options, errors, className}: {labelProps: Omit<JSX.IntrinsicElements['label'], 'className'>, selectProps: Omit<React.ComponentPropsWithoutRef<typeof Select.Root>, 'className'>, errors?: ListOfErrors, className?: string, options: string[]}) {
+
+	const fallbackId = useId()
+	const id = selectProps.id ?? selectProps.name ?? fallbackId
+	const errorId = errors?.length ? `${id}-error` : undefined
+	return (
+		<div className={clsx(styles.field, className)}>
+			<Select.Root>
+				<Select.Trigger
+					className="min-h-[48px] inline-flex gap-4 justify-center items-center rounded-lg border border-night-400 bg-night-700 px-4 text-body-xs caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
+
+				>
+					<Select.Value className='pr-8' placeholder={labelProps.children} />
+					<Select.Icon children={<ChevronDownIcon />} />
+				</Select.Trigger>
+
+				<Select.Portal>
+					<Select.Content className='overflow-hidden bg-gray-800 rounded-md '>
+						<Select.ScrollUpButton />
+						<Select.Viewport className="">
+							<Select.Group>
+								<Select.Label className='p-4'>{labelProps.children}</Select.Label>
+								{options?.map(item => (<Select.Item key={item} className='rounded-md pl-9 flex items-center  pb-6 relative select-none' value={item}>
+									<Select.ItemText>{item}</Select.ItemText>
+									<Select.ItemIndicator className='absolute left-0 w-6 inline-flex items-center justify-center'>
+										<CheckIcon />
+									</Select.ItemIndicator>
+								</Select.Item>))}
+							</Select.Group>
+
+							<Select.Separator />
+						</Select.Viewport>
+						<Select.ScrollDownButton className='flex items-center justify-center h-6 bg-white cursor-default' />
+						<Select.Arrow />
+					</Select.Content>
+				</Select.Portal>
+			</Select.Root>
+		</div>
+	)
+}
+
+// const SelectItem = React.forwardRef(
+// 	({ children, className, ...props }, forwardedRef) => {
+// 		return (
+// 			<Select.Item
+// 				className={classnames('SelectItem', className)}
+// 				{...props}
+// 				ref={forwardedRef}
+// 			>
+// 				<Select.ItemText>{children}</Select.ItemText>
+// 				<Select.ItemIndicator className="SelectItemIndicator">
+// 					<CheckIcon />
+// 				</Select.ItemIndicator>
+// 			</Select.Item>
+// 		)
+// 	},
+// )
+
 
 export function getButtonClassName({
 	size,
